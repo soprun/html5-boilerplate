@@ -43,6 +43,14 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
+      - name: Run lint
+        continue-on-error: true
+        run: npm run lint
+
+      - name: Run test
+        continue-on-error: true
+        run: npm run test
+
       - name: Run build
         run: npm run build --if-present
 
@@ -55,46 +63,37 @@ jobs:
             dist
             !dist/**/*.md
 
-  #  deploy:
-  #    name: Deploy
-  #    needs: build-and-publish
-  #    runs-on: ubuntu-latest
-  #    steps:
-  #
-  #      - name: Checkout code
-  #        uses: actions/checkout@v2
-  #        with:
-  #          fetch-depth: 0
+#  test:
+#    needs: build
+#    name: Testing
+#    runs-on: ubuntu-latest
+#    continue-on-error: true
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v2
+#        with:
+#          fetch-depth: 0
+#
+#      - name: Setup node.js
+#        uses: actions/setup-node@v2
+#        env:
+#          NODE_ENV: development
+#        with:
+#          node-version: '14'
+#          check-latest: true
+#          cache: 'npm'
+#          cache-dependency-path: '**/package-lock.json'
 
-  test:
-    needs: build
-    name: Testing
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Setup node.js
-        uses: actions/setup-node@v2
-        env:
-          NODE_ENV: development
-        with:
-          node-version: '14'
-          check-latest: true
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
-
-      - name: Run lint
-        continue-on-error: true
-        run: npm run lint
-
-      - name: Run test
-        continue-on-error: true
-        run: npm run test
-
+#  deploy:
+#    name: Deploy
+#    needs: build-and-publish
+#    runs-on: ubuntu-latest
+#    steps:
+#
+#      - name: Checkout code
+#        uses: actions/checkout@v2
+#        with:
+#          fetch-depth: 0
 
 #  - name: The job "run-lint" has failed
 #    if: ${{ failure() }}
