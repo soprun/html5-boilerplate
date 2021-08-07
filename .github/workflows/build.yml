@@ -13,9 +13,6 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   # workflow_dispatch:
 
-env:
-  NODE_VERSION: 14
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -25,8 +22,6 @@ jobs:
 
       - name: Setup node.js
         uses: actions/setup-node@v2
-        env:
-          NODE_ENV: development
         with:
           node-version: '14'
           check-latest: true
