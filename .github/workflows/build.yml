@@ -1,25 +1,20 @@
-# This is a basic workflow to help you get started with Actions
+name: Build and Publish
 
-name: CI build
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-
-  # Allows you to run this workflow manually from the Actions tab
-  # workflow_dispatch:
 
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository code
+      - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Setup node.js
         uses: actions/setup-node@v2
@@ -62,15 +57,27 @@ jobs:
             dist
             !dist/**/*.md
 
+#  deploy:
+#    name: Deploy
+#    needs: build-and-publish
+#    runs-on: ubuntu-latest
+#    steps:
+#
+#      - name: Checkout code
+#        uses: actions/checkout@v2
+#        with:
+#          fetch-depth: 0
+
   test:
-    name: Testing
     needs: build
+    name: Testing
     runs-on: ubuntu-latest
-    if: ${{ success() }}
     continue-on-error: true
     steps:
-      - name: Check out repository code
+      - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Run lint
         run: npm run lint
@@ -84,27 +91,9 @@ jobs:
       - name: Run npm-check-updates
         run: npm-check-updates --upgrade
 
-  stage:
-    name: Deploy to stage
-    needs: test
-    if: ${{ success() }}
-    runs-on: ubuntu-latest
-    environment:
-      name: staging
-      url: ${{ steps.step_id.outputs.url_output }}
-    steps:
-      - run: echo "Deploying to stage server on branch ${GITHUB_REF}"
 
-  prod:
-    name: Deploy to production
-    needs: stage
-    if: ${{ success() }}
-    runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: ${{ steps.step_id.outputs.url_output }}
-    steps:
-      - run: echo "Deploying to production server on branch ${GITHUB_REF}"
+
+
 
 
 #  - name: The job "run-lint" has failed

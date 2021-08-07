@@ -1,0 +1,22 @@
+name: Staging Deployment
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    types: [ labeled ]
+
+jobs:
+  stage:
+    name: Staging Deployment
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: ${{ steps.step_id.outputs.url_output }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - run: echo "Deploying to stage server on branch ${GITHUB_REF}"
