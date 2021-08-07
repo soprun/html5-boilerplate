@@ -88,9 +88,11 @@ jobs:
           cache-dependency-path: '**/package-lock.json'
 
       - name: Run lint
+        continue-on-error: true
         run: npm run lint
 
       - name: Run test
+        continue-on-error: true
         run: npm run test
 
 
