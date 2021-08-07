@@ -8,6 +8,7 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -77,6 +78,7 @@ jobs:
     if: github.ref == 'refs/heads/develop'
     name: Staging Deployment
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     environment:
       name: staging
     steps:
@@ -91,29 +93,24 @@ jobs:
     needs: build
     # if: ${{ github.ref == 'refs/heads/master' && github.event.pull_request.merged == true }}
     if: github.ref == 'refs/heads/master'
+    # if: ${{ github.event.inputs.tag != '' }} # don't release if no tag is specified
     name: Production Deployment
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     environment:
       name: production
     steps:
-      #      - name: Checkout code
-      #        uses: actions/checkout@v2
-      #        with:
-      #          fetch-depth: 0
-
       - run: echo "Deploying to production server on branch $GITHUB_REF"
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Downloading an archive production artifacts
         uses: actions/download-artifact@v2
         with:
-          name: build-dist
           path: dist
-
-      #      - name: Download all workflow run artifacts
-      #        uses: actions/download-artifact@v2
-
-      - name: Display structure of downloaded files
-        run: ls -R
 
       - name: Display structure of downloaded files
         run: ls -R ./dist/
