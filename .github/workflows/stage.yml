@@ -12,7 +12,7 @@ jobs:
       - run: echo "Deploying to staging server on branch $GITHUB_REF"
 
   stage:
-    needs: [ build, check ]
+    needs: check
     name: Staging Deployment
     runs-on: ubuntu-latest
     environment:
