@@ -85,12 +85,27 @@ jobs:
         continue-on-error: true
         run: npm-check-updates --upgrade
 
-  prod-check:
+  stage:
+    name: Deploying to stage server
     needs: [ build, test ]
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: ${{ success() }}
     runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: ${{ steps.step_id.outputs.url_output }}
     steps:
-      - run: echo "Deploying to production server on branch $GITHUB_REF"
+      - run: echo "Deploying to stage server on branch ${GITHUB_REF}"
+
+  prod:
+    name: Deploying to production server
+    needs: [ build, test, stage ]
+    if: ${{ success() }}
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ steps.step_id.outputs.url_output }}
+    steps:
+      - run: echo "Deploying to production server on branch ${GITHUB_REF}"
 
 
 #  - name: The job "run-lint" has failed
