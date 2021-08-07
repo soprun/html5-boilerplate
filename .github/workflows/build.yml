@@ -1,8 +1,14 @@
 # see: https://ru.werf.io/documentation/v1.2/advanced/ci_cd/github_actions.html#%D1%82%D1%80%D0%B5%D0%B1%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F
 
-name: Build
+name: Continuous Integration
 
-on: [ push ]
+on: [ push , pull_request ]
+
+#on:
+#  push:
+#    branches: [ develop ]
+#  pull_request:
+#    branches: [ develop ]
 
 jobs:
   build:
@@ -34,11 +40,9 @@ jobs:
         id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
         with:
           path: ${{ steps.npm-cache-dir.outputs.dir }}
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
+            ${{ runner.os }}-node-
 
       - name: Install dependencies
         run: npm ci --ignore-scripts
@@ -51,10 +55,18 @@ jobs:
         continue-on-error: true
         run: npm run test
 
+      - name: Run audit
+        continue-on-error: true
+        run: npm audit --production
+
+      - name: Run npm-check-updates
+        continue-on-error: true
+        run: npm-check-updates --upgrade
+
       - name: Run build
         run: npm run build --if-present
 
-      - name: Archive artifacts
+      - name: Uploading an archive of artifacts
         uses: actions/upload-artifact@v2
         with:
           retention-days: 2
@@ -63,65 +75,8 @@ jobs:
             dist
             !dist/**/*.md
 
-#  test:
-#    needs: build
-#    name: Testing
-#    runs-on: ubuntu-latest
-#    continue-on-error: true
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v2
-#        with:
-#          fetch-depth: 0
-#
-#      - name: Setup node.js
-#        uses: actions/setup-node@v2
-#        env:
-#          NODE_ENV: development
-#        with:
-#          node-version: '14'
-#          check-latest: true
-#          cache: 'npm'
-#          cache-dependency-path: '**/package-lock.json'
-
-#  deploy:
-#    name: Deploy
-#    needs: build-and-publish
-#    runs-on: ubuntu-latest
-#    steps:
-#
-#      - name: Checkout code
-#        uses: actions/checkout@v2
-#        with:
-#          fetch-depth: 0
-
-#  - name: The job "run-lint" has failed
-#    if: ${{ failure() }}
-#    run: echo "on-failed on branch $GITHUB_REF"
-#
-#  - name: The job "run-lint" has success
-#    if: ${{ success() }}
-#    run: echo "on-success on branch $GITHUB_REF"
-
-  staging-check:
+  deploy-stag:
     needs: build
-    # this job will only run if the PR has been merged
-    if: ${{ github.ref == 'refs/heads/develop' && github.event.pull_request.merged == true }}
-    runs-on: ubuntu-latest
-    # only trigger on pull request closed events
-    steps:
-      - run: echo PR #${{ github.event.number }} has been merged
-
-  staging-close:
-    needs: build
-    # this job will only run if the PR has been closed without being merged
-    if: ${{ github.ref == 'refs/heads/develop' && github.event.pull_request.merged == false }}
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo PR #${{ github.event.number }} has been closed without being merged
-
-  staging-deploy:
-    needs: staging-check
     if: ${{ github.ref == 'refs/heads/develop' }}
     name: Staging Deployment
     runs-on: ubuntu-latest
@@ -134,22 +89,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup node.js
-        uses: actions/setup-node@v2
-        env:
-          NODE_ENV: production
-        with:
-          node-version: '14'
-          check-latest: true
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
-
-      - run: echo "Deploying to staging server on branch $GITHUB_REF"
-
-      - name: Run audit
-        run: npm audit --production
-
-      - name: Run npm-check-updates
-        run: npm-check-updates --upgrade
-
       - run: echo "Deploying to stage server on branch ${GITHUB_REF}"
+
+  deploy-prod:
+    needs: [ build, deploy-stag ]
+    if: ${{ github.ref == 'refs/heads/main' }}
+    name: Production Deployment
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ steps.step_id.outputs.url_output }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - run: echo "Deploying to production server on branch $GITHUB_REF"
