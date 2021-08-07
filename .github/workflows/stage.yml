@@ -4,7 +4,6 @@ name: Staging Deployment
 on:
   pull_request:
     branches: [ develop ]
-    types: [ closed ]
 
 jobs:
   check:
