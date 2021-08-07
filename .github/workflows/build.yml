@@ -49,23 +49,7 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      - name: Run lint
-        continue-on-error: true
-        run: npm run lint
-
-#      - name: The job "run-lint" has failed
-#        if: ${{ failure() }}
-#        run: echo "on-failed on branch $GITHUB_REF"
-#
-#      - name: The job "run-lint" has success
-#        if: ${{ success() }}
-#        run: echo "on-success on branch $GITHUB_REF"
-
-      - name: Run test
-        continue-on-error: true
-        run: npm test
-
-      - name: Run bundles for production
+      - name: Run build
         run: npm run build --if-present
 
       - name: Archive artifacts
@@ -76,3 +60,39 @@ jobs:
           path: |
             dist
             !dist/**/*.md
+
+      - name: Run lint
+        continue-on-error: true
+        run: npm run lint
+
+      - name: Run test
+        continue-on-error: true
+        run: npm test
+
+      - name: Run audit
+        continue-on-error: true
+        run: npm run audit --production
+
+      - name: Run npm-check-updates
+        continue-on-error: true
+        run: npm-check-updates --upgrade
+
+  prod-check:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploying to production server on branch $GITHUB_REF"
+
+#  test:
+#    needs: build
+#    runs-on: ubuntu-latest
+#    if: ${{ success() }}
+#    steps:
+
+#  - name: The job "run-lint" has failed
+#    if: ${{ failure() }}
+#    run: echo "on-failed on branch $GITHUB_REF"
+#
+#  - name: The job "run-lint" has success
+#    if: ${{ success() }}
+#    run: echo "on-success on branch $GITHUB_REF"
