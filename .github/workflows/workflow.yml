@@ -107,7 +107,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: build-dist
-          path: .
+          path: dist
 
       #      - name: Download all workflow run artifacts
       #        uses: actions/download-artifact@v2
