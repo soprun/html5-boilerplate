@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: CI build
 
 # Controls when the workflow will run
 on:
@@ -13,15 +13,17 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Check out repository code
+        uses: actions/checkout@v2
 
       - name: Setup node.js
         uses: actions/setup-node@v2
+        env:
+          NODE_ENV: development
         with:
           node-version: '14'
           check-latest: true
@@ -47,10 +49,16 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      - name: Lint
+      - name: run-lint
         run: npm run lint
 
-      - name: Build
+      - name: The job "run-lint" has failed
+        if: ${{ failure() }}
+
+      - name: The job "run-lint" has success
+        if: ${{ success() }}
+
+      - name: Run build
         run: npm run build --if-present
 
       - name: Archive production artifacts
@@ -62,12 +70,13 @@ jobs:
             dist
             !dist/**/*.md
 
-#  test:
-#    if: ${{ success() }}
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Test
-#        run: npm test
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ success() }}
+    steps:
+      - name: Test
+        run: npm test
 #
 #  on-success:
 #    if: ${{ github.event.workflow_run.conclusion == 'success' }}
