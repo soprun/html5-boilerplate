@@ -1,18 +1,31 @@
 name: Staging Deployment
 
+# only trigger on pull request closed events
 on:
-  push:
+  pull_request:
     branches: [ develop ]
+    types: [ closed ]
 
 jobs:
-  check:
-    if: ${{ github.ref == 'refs/heads/develop' }}
+  merged:
+    # this job will only run if the PR has been merged
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Deploying to staging server on branch $GITHUB_REF"
+      - run: |
+          echo PR #${{ github.event.number }} has been merged
 
-  stage:
-    needs: check
+  close:
+    # this job will only run if the PR has been closed without being merged
+    if: github.event.pull_request.merged == false
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo PR #${{ github.event.number }} has been closed without being merged
+
+  deploy:
+    needs: merged
+    if: ${{ success() }}
     name: Staging Deployment
     runs-on: ubuntu-latest
     environment:
@@ -33,6 +46,9 @@ jobs:
           check-latest: true
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
+
+      - run: |
+          echo "Deploying to staging server on branch $GITHUB_REF"
 
       - name: Run audit
         run: npm audit --production
