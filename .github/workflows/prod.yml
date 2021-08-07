@@ -18,7 +18,6 @@ jobs:
 
   deploy:
     needs: check
-    if: ${{ success() }}
     name: Production Deployment
     runs-on: ubuntu-latest
     environment:
