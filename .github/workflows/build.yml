@@ -15,6 +15,7 @@ on:
 
 jobs:
   build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
@@ -62,6 +63,7 @@ jobs:
             !dist/**/*.md
 
   test:
+    name: Testing
     needs: build
     runs-on: ubuntu-latest
     if: ${{ success() }}
@@ -70,24 +72,24 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run lint
-        continue-on-error: true
+        continue-on-error: false
         run: npm run lint
 
       - name: Run test
-        continue-on-error: true
+        continue-on-error: false
         run: npm test
 
       - name: Run audit
-        continue-on-error: true
+        continue-on-error: false
         run: npm run audit --production
 
       - name: Run npm-check-updates
-        continue-on-error: true
+        continue-on-error: false
         run: npm-check-updates --upgrade
 
   stage:
-    name: Deploying to stage server
-    needs: [ build, test ]
+    name: Deploy to stage
+    needs: test
     if: ${{ success() }}
     runs-on: ubuntu-latest
     environment:
@@ -97,8 +99,8 @@ jobs:
       - run: echo "Deploying to stage server on branch ${GITHUB_REF}"
 
   prod:
-    name: Deploying to production server
-    needs: [ build, test, stage ]
+    name: Deploy to production
+    needs: stage
     if: ${{ success() }}
     runs-on: ubuntu-latest
     environment:
