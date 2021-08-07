@@ -1,4 +1,4 @@
-name: Cleanup container registry
+name: Cleanup
 
 on:
   schedule:
