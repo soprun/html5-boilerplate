@@ -13,6 +13,34 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+.default-steps: &default-steps
+  # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+  - uses: actions/checkout@v2
+
+  - name: 'Setup node.js'
+    uses: actions/setup-node@v2
+    with:
+      node-version: '14'
+      check-latest: true
+      cache: 'npm'
+      cache-dependency-path: '**/package-lock.json'
+
+  - name: 'Get npm cache directory'
+    id: npm-cache-dir
+    run: |
+      echo "::set-output name=dir::$(npm config get cache)"
+
+  - name: Cache node modules
+    uses: actions/cache@v2
+    id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
+    with:
+      path: ${{ steps.npm-cache-dir.outputs.dir }}
+      key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+      restore-keys: |
+        ${{ runner.os }}-build-${{ env.cache-name }}-
+        ${{ runner.os }}-build-
+        ${{ runner.os }}-
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -22,60 +50,63 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      <<: *default-steps
 
-      - name: 'Setup node.js'
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
-          check-latest: true
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
+        - name: Install Dependencies
+          run: npm ci --ignore-scripts
 
-      - name: 'Get npm cache directory'
-        id: npm-cache-dir
-        run: |
-          echo "::set-output name=dir::$(npm config get cache)"
+        - name: Lint
+          allow-failure: true
+          run: npm run lint
 
-      - name: 'Cache node_modules'
-        uses: actions/cache@v2
-        id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
-        with:
-          path: ${{ steps.npm-cache-dir.outputs.dir }}
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+        - name: Build
+          run: npm run build --if-present
 
-      - name: Install Dependencies
-        run: npm ci --ignore-scripts
+        - name: Archive production artifacts
+          uses: actions/upload-artifact@v2
+          with:
+            retention-days: 2
+            name: build-dist
+            path: |
+              dist
+              !dist/**/*.md
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Build
-        run: npm run build --if-present
-
+  test:
+    runs-on: ubuntu-latest
+    steps:
       - name: Test
+        allow-failure: true
         run: npm test
 
-      - name: Archive production artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: build-dist
-          path: |
-            dist
-            !dist/**/*.md
+  on-success:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "on-success on branch $GITHUB_REF"
 
-      # allow-failure: true
+      - name: The job has succeeded
+        if: ${{ success() }}
+
+  on-failure:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "on-failure on branch $GITHUB_REF"
+      - name: The job has failed
+        if: ${{ failure() }}
+
+  prod-check:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploying to production server on branch $GITHUB_REF"
+
 
 #      - name: Run audit
 #        run: npm run audit --production
 #
 #      - name: Run npm-check-updates
 #        run: npm-check-updates --upgrade
-
-#  build_and_test:
 #
 #    - name: Archive code coverage results
 #      uses: actions/upload-artifact@v2
