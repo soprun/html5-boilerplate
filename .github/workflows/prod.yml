@@ -5,7 +5,14 @@ on:
     branches: [ master ]
 
 jobs:
+  check:
+    if: ${{ github.ref == 'refs/heads/master' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploying to production server on branch $GITHUB_REF"
+
   prod:
+    needs: check
     name: Production Deployment
     runs-on: ubuntu-latest
     environment:
