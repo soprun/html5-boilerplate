@@ -4,6 +4,12 @@ name: Continuous Integration
 
 on: [ push , pull_request ]
 
+#on:
+#  push:
+#    branches: [ develop ]
+#  pull_request:
+#    branches: [ develop ]
+
 jobs:
   build:
     name: Build
@@ -34,11 +40,9 @@ jobs:
         id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
         with:
           path: ${{ steps.npm-cache-dir.outputs.dir }}
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
+            ${{ runner.os }}-node-
 
       - name: Install dependencies
         run: npm ci --ignore-scripts
@@ -46,55 +50,6 @@ jobs:
       - name: Run lint
         continue-on-error: true
         run: npm run lint
-
-      - name: Run build
-        run: npm run build --if-present
-
-      - name: Uploading an archive of artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          retention-days: 2
-          name: build-dist
-          path: |
-            dist
-            !dist/**/*.md
-
-  test:
-    needs: build
-    name: Testing
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Setup node.js
-        uses: actions/setup-node@v2
-        env:
-          NODE_ENV: development
-        with:
-          node-version: '14'
-          check-latest: true
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
-
-      - name: Get npm config get cache directory
-        id: npm-cache-dir
-        run: |
-          echo "::set-output name=dir::$(npm config get cache)"
-
-      - name: Setup npm cache node_modules
-        uses: actions/cache@v2
-        id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
-        with:
-          path: ${{ steps.npm-cache-dir.outputs.dir }}
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
 
       - name: Run test
         continue-on-error: true
@@ -108,22 +63,46 @@ jobs:
         continue-on-error: true
         run: npm-check-updates --upgrade
 
+      - name: Run build
+        run: npm run build --if-present
 
-#  deploy:
-#    name: Deploy
-#    needs: build-and-publish
-#    runs-on: ubuntu-latest
-#    steps:
-#
-#      - name: Checkout code
-#        uses: actions/checkout@v2
-#        with:
-#          fetch-depth: 0
+      - name: Uploading an archive of artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          retention-days: 2
+          name: build-dist
+          path: |
+            dist
+            !dist/**/*.md
 
-#  - name: The job "run-lint" has failed
-#    if: ${{ failure() }}
-#    run: echo "on-failed on branch $GITHUB_REF"
-#
-#  - name: The job "run-lint" has success
-#    if: ${{ success() }}
-#    run: echo "on-success on branch $GITHUB_REF"
+  deploy-stag:
+    needs: build
+    if: ${{ github.ref == 'refs/heads/develop' }}
+    name: Staging Deployment
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: ${{ steps.step_id.outputs.url_output }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - run: echo "Deploying to stage server on branch ${GITHUB_REF}"
+
+  deploy-prod:
+    needs: [ build, deploy-stag ]
+    if: ${{ github.ref == 'refs/heads/main' }}
+    name: Production Deployment
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ steps.step_id.outputs.url_output }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - run: echo "Deploying to production server on branch $GITHUB_REF"
