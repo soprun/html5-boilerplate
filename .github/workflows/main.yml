@@ -47,21 +47,24 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: Install dependencies
+      - name: npm install dependencies
         run: npm ci --ignore-scripts
 
-      - name: Run build
-        run: npm run build --if-present
-
-      - name: Run test
-        run: npm test
-
-      - name: Run lint
+      - name: npm run lint
         run: npm run lint
 
-      - name: Run audit
-        run: npm run audit --production
+      - name: npm run build
+        run: npm run build --if-present
 
-      - name: Run npm-check-updates
-        run: npm-check-updates --upgrade
+      - name: npm run test
+        run: npm test
+
+
+      # allow-failure: true
+
+#      - name: Run audit
+#        run: npm run audit --production
+#
+#      - name: Run npm-check-updates
+#        run: npm-check-updates --upgrade
 
