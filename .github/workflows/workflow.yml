@@ -58,11 +58,11 @@ jobs:
         run: npm run npm-check
 
       - name: Run build in production mode
-        if: ${{ github.event.pull_request.merged == true }}
+        if: github.event.pull_request.merged == true
         run: npm run build --if-present
 
       - name: Uploading an archive of artifacts
-        if: ${{ github.event.pull_request.merged == true }}
+        if: github.event.pull_request.merged == true
         uses: actions/upload-artifact@v2
         with:
           retention-days: 2
@@ -74,12 +74,11 @@ jobs:
   deploy-stag:
     needs: build
     # if: ${{ github.ref == 'refs/heads/develop' && github.event.pull_request.merged == true }}
-    if: ${{ github.ref == 'refs/heads/develop' }}
+    if: github.ref == 'refs/heads/develop'
     name: Staging Deployment
     runs-on: ubuntu-latest
     environment:
       name: staging
-      # url: ${{ steps.step_id.outputs.url_output }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -91,12 +90,11 @@ jobs:
   deploy-prod:
     needs: build
     # if: ${{ github.ref == 'refs/heads/master' && github.event.pull_request.merged == true }}
-    if: ${{ github.ref == 'refs/heads/master' }}
+    if: github.ref == 'refs/heads/master'
     name: Production Deployment
     runs-on: ubuntu-latest
     environment:
       name: production
-      # url: ${{ steps.step_id.outputs.url_output }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -104,3 +102,11 @@ jobs:
           fetch-depth: 0
 
       - run: echo "Deploying to production server on branch $GITHUB_REF"
+
+      - name: Downloading an archive of artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: build-dist
+
+      - name: Display structure of downloaded files
+        run: ls -R
