@@ -2,7 +2,10 @@ name: Review Deployment
 
 on:
   pull_request:
-    types: [ labeled ]
+    types:
+      - opened
+      - reopened
+      - synchronize
 
 jobs:
   review:
