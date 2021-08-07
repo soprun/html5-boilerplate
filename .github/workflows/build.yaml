@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI build
+name: CI
 
 # Controls when the workflow will run
 on:
@@ -70,13 +70,13 @@ jobs:
             dist
             !dist/**/*.md
 
-  test:
-    needs: build
-    runs-on: ubuntu-latest
-    if: ${{ success() }}
-    steps:
-      - name: Test
-        run: npm test
+#  test:
+#    needs: build
+#    runs-on: ubuntu-latest
+#    if: ${{ success() }}
+#    steps:
+#      - name: Test
+#        run: npm test
 #
 #  on-success:
 #    if: ${{ github.event.workflow_run.conclusion == 'success' }}
