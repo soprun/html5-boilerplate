@@ -1,10 +1,20 @@
 {
-  "name": " ",
+  "name": "html5-boilerplate",
+  "homepage": "https://github.com/soprun/html5-boilerplate#readme",
   "version": "0.0.1",
   "description": "",
-  "keywords": "",
-  "license": "",
+  "keywords": [
+    "html5-boilerplate",
+    "github",
+    "ci"
+  ],
+  "license": "UNLICENSED",
+  "private": true,
   "author": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/soprun/html5-boilerplate.git"
+  },
   "scripts": {
     "build": "parcel build index.html",
     "dev": "parcel index.html --open",
