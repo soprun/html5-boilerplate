@@ -79,21 +79,21 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup node.js
+        uses: actions/setup-node@v2
+        env:
+          NODE_ENV: development
+        with:
+          node-version: '14'
+          check-latest: true
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
       - name: Run lint
         run: npm run lint
 
       - name: Run test
-        run: npm test
-
-      - name: Run audit
-        run: npm run audit --production
-
-      - name: Run npm-check-updates
-        run: npm-check-updates --upgrade
-
-
-
-
+        run: npm run test
 
 
 #  - name: The job "run-lint" has failed

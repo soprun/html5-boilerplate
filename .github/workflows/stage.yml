@@ -19,4 +19,20 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup node.js
+        uses: actions/setup-node@v2
+        env:
+          NODE_ENV: production
+        with:
+          node-version: '14'
+          check-latest: true
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Run audit
+        run: npm audit --production
+
+      - name: Run npm-check-updates
+        run: npm-check-updates --upgrade
+
       - run: echo "Deploying to stage server on branch ${GITHUB_REF}"
