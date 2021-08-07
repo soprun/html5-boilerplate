@@ -1,7 +1,11 @@
 name: Production Deployment
 
+# git tag -a v1.0.2
+
 on:
   push:
+    tags:
+      - "v*.*.*"
     branches: [ master ]
 
 jobs:
@@ -9,10 +13,12 @@ jobs:
     if: ${{ github.ref == 'refs/heads/master' }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Deploying to production server on branch $GITHUB_REF"
+      - run: |
+          echo "Deploying to production server on branch $GITHUB_REF"
 
-  prod:
+  deploy:
     needs: check
+    if: ${{ success() }}
     name: Production Deployment
     runs-on: ubuntu-latest
     environment:
@@ -24,4 +30,5 @@ jobs:
         with:
           fetch-depth: 0
 
-      - run: echo "Deploying to production server on branch ${GITHUB_REF}"
+      - run: |
+          echo "Deploying to production server on branch $GITHUB_REF"

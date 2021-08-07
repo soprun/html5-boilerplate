@@ -2,7 +2,7 @@
 
 name: Build
 
-on: [ push, pull_request ]
+on: [ push ]
 
 jobs:
   build:
@@ -102,3 +102,53 @@ jobs:
 #  - name: The job "run-lint" has success
 #    if: ${{ success() }}
 #    run: echo "on-success on branch $GITHUB_REF"
+
+  staging-check:
+    # this job will only run if the PR has been merged
+    if: github.ref == 'refs/heads/develop' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    # only trigger on pull request closed events
+    steps:
+      - run: echo PR #${{ github.event.number }} has been merged
+
+  staging-close:
+    # this job will only run if the PR has been closed without being merged
+    if: github.ref == 'refs/heads/develop' && github.event.pull_request.merged == false
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo PR #${{ github.event.number }} has been closed without being merged
+
+  staging-deploy:
+    needs: staging-check
+    if: ${{ github.ref == 'refs/heads/develop' }}
+    name: Staging Deployment
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: ${{ steps.step_id.outputs.url_output }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup node.js
+        uses: actions/setup-node@v2
+        env:
+          NODE_ENV: production
+        with:
+          node-version: '14'
+          check-latest: true
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - run: |
+          echo "Deploying to staging server on branch $GITHUB_REF"
+
+      - name: Run audit
+        run: npm audit --production
+
+      - name: Run npm-check-updates
+        run: npm-check-updates --upgrade
+
+      - run: echo "Deploying to stage server on branch ${GITHUB_REF}"
