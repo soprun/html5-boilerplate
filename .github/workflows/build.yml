@@ -1,10 +1,8 @@
-name: Build and Publish
+# see: https://ru.werf.io/documentation/v1.2/advanced/ci_cd/github_actions.html#%D1%82%D1%80%D0%B5%D0%B1%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+name: Build and Testing
+
+on: [ push, pull_request ]
 
 jobs:
   build:
@@ -57,16 +55,16 @@ jobs:
             dist
             !dist/**/*.md
 
-#  deploy:
-#    name: Deploy
-#    needs: build-and-publish
-#    runs-on: ubuntu-latest
-#    steps:
-#
-#      - name: Checkout code
-#        uses: actions/checkout@v2
-#        with:
-#          fetch-depth: 0
+  #  deploy:
+  #    name: Deploy
+  #    needs: build-and-publish
+  #    runs-on: ubuntu-latest
+  #    steps:
+  #
+  #      - name: Checkout code
+  #        uses: actions/checkout@v2
+  #        with:
+  #          fetch-depth: 0
 
   test:
     needs: build
