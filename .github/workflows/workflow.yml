@@ -89,7 +89,7 @@ jobs:
       - run: echo "Deploying to stage server on branch ${GITHUB_REF}"
 
   deploy-prod:
-    needs: [ build, deploy-stag ]
+    needs: [ build ]
     # if: ${{ github.ref == 'refs/heads/master' && github.event.pull_request.merged == true }}
     if: ${{ github.ref == 'refs/heads/master' }}
     name: Production Deployment
