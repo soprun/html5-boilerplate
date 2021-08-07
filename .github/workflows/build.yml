@@ -61,6 +61,14 @@ jobs:
             dist
             !dist/**/*.md
 
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ success() }}
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+
       - name: Run lint
         continue-on-error: true
         run: npm run lint
@@ -78,16 +86,12 @@ jobs:
         run: npm-check-updates --upgrade
 
   prod-check:
+    needs: [ build, test ]
     if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
       - run: echo "Deploying to production server on branch $GITHUB_REF"
 
-#  test:
-#    needs: build
-#    runs-on: ubuntu-latest
-#    if: ${{ success() }}
-#    steps:
 
 #  - name: The job "run-lint" has failed
 #    if: ${{ failure() }}
