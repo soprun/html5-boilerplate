@@ -79,7 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: staging
-      url: ${{ steps.step_id.outputs.url_output }}
+      # url: ${{ steps.step_id.outputs.url_output }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -96,7 +96,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: ${{ steps.step_id.outputs.url_output }}
+      # url: ${{ steps.step_id.outputs.url_output }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
