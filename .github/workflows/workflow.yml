@@ -53,11 +53,11 @@ jobs:
         continue-on-error: true
         run: npm audit --production
 
-      - name: Run npm-check-updates
+      - name: Run npm-check
         continue-on-error: true
-        run: npm-check-updates --upgrade
+        run: npm run npm-check
 
-      - name: Run build
+      - name: Run build in production mode
         if: ${{ github.event.pull_request.merged == true }}
         run: npm run build --if-present
 
@@ -73,7 +73,8 @@ jobs:
 
   deploy-stag:
     needs: build
-    if: ${{ github.ref == 'refs/heads/develop' && github.event.pull_request.merged == true }}
+    # if: ${{ github.ref == 'refs/heads/develop' && github.event.pull_request.merged == true }}
+    if: ${{ github.ref == 'refs/heads/develop' }}
     name: Staging Deployment
     runs-on: ubuntu-latest
     environment:
@@ -89,7 +90,8 @@ jobs:
 
   deploy-prod:
     needs: [ build, deploy-stag ]
-    if: ${{ github.ref == 'refs/heads/master' && github.event.pull_request.merged == true }}
+    # if: ${{ github.ref == 'refs/heads/master' && github.event.pull_request.merged == true }}
+    if: ${{ github.ref == 'refs/heads/master' }}
     name: Production Deployment
     runs-on: ubuntu-latest
     environment:
