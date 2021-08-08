@@ -79,4 +79,5 @@ jobs:
     environment:
       name: production
     steps:
+      - uses: action/deploy@v1
       - uses: soprun/deploy@v1
