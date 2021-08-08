@@ -32,7 +32,8 @@ jobs:
 
   staging:
     name: Staging deployment
-    if: github.event.workflow_run.conclusion == 'success' && contains( github.ref, 'develop')
+    if: contains( github.ref, 'develop')
+    # if: github.event.workflow_run.conclusion == 'success' && contains( github.ref, 'develop')
     # if: github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -70,7 +71,8 @@ jobs:
 
   prod:
     name: Production deployment
-    if: github.event.workflow_run.conclusion == 'success' && contains( github.ref, 'master')
+    if: contains( github.ref, 'master')
+    # if: github.event.workflow_run.conclusion == 'success' && contains( github.ref, 'master')
     # if: github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -79,4 +81,5 @@ jobs:
     steps:
       - uses: actions/deploy@v1
         with:
+          token: ${{ github.token }}
           os: ${{ runner.os }}
