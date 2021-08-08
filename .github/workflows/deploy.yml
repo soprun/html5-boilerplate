@@ -66,9 +66,10 @@ jobs:
         with:
           repository: soprun/html5-boilerplate
           ref: v1.0.0
-          token: ${{ secrets.GIT_HUB_TOKEN }} # stored in GitHub secrets
-          path: .github/actions/deploy/action.yml
+          # stored in GitHub secrets
+          token: ${{ secrets.GIT_HUB_TOKEN }}
+          path: ".github/actions/deploy/action.yml"
 
-      — uses: ./.github/actions/deploy@master
+      — uses: "./.github/actions/deploy@master"
         with:
           github-token: ${{ secrets.GIT_HUB_TOKEN }}
