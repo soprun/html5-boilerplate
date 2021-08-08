@@ -114,3 +114,6 @@ jobs:
           echo "My password is password123"
           echo "::add-mask::$SUPER_SECRET"
           echo "Here's a secret for you: $SUPER_SECRET"
+
+          echo "DATABASE_USERNAME - ::add-mask::$DATABASE_USERNAME"
+          echo "DATABASE_USERNAME - $DATABASE_USERNAME"
