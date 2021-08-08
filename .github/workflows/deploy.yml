@@ -1,17 +1,20 @@
 name: Continuous delivery
 
 on:
-  push:
-    branches:
-      - master
-
-# permissions: read-all
+  workflow_run:
+    workflows: [ "Continuous integration" ]
+    branches: [ master, develop ]
+    types: [ completed ]
 
 env:
-  # Секретные секретеры твоего приложение, (например подключение к базе данных, открытый API ключ и так далее).
+  # Для примера сделал секреты глобальными... сейчас это не важно.
+  # Здесь объявлены переменные окружения, нужные для работы приложения.
+
+  # Пример: доступ к базе данных приложения.
   DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
   DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
 
+  # Пример: учетная запись для общения с внешним API.
   BITRIX_API_KEY: ${{ secrets.BITRIX_API_KEY }}
   BITRIX_API_SECRET: ${{ secrets.BITRIX_API_SECRET }}
 
@@ -29,20 +32,35 @@ jobs:
   #    steps:
   #      - run: echo "on-failure on branch $GITHUB_REF"
 
-  #  staging:
-  #    name: Staging deployment
-  #    if: contains( github.ref, 'develop')
-  #    # if: github.event.workflow_run.conclusion == 'success' && contains( github.ref, 'develop')
-  #    # if: github.event_name == 'push'
-  #    runs-on: ubuntu-latest
-  #    timeout-minutes: 10
-  #    environment:
-  #      name: staging
-  #    steps:
-  #      - name: Checkout code
-  #        uses: actions/checkout@v2
-  #
-  #      - uses: actions/deploy@v1
+  stage:
+    name: Staging deployment
+    if: contains( github.ref, 'develop')
+    # if: github.event.workflow_run.conclusion == 'success' && contains( github.ref, 'develop')
+    # if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Downloading an archive production artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: dist
+
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
+
+      - name: Adding Known Hosts
+        run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy with rsync
+        run: rsync -avz . ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_PATH }}
 
   prod:
     name: Production deployment
@@ -54,22 +72,45 @@ jobs:
     environment:
       name: production
     steps:
-
       - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
 
-      # checkout the private repo containing the action to run
-      - name: Checkout GitHub Action Repo
-        uses: actions/checkout@v2
+      - name: Downloading an archive production artifacts
+        uses: actions/download-artifact@v2
         with:
-          repository: soprun/html5-boilerplate
-          ref: v1.0.0
-          # stored in GitHub secrets
-          token: ${{ secrets.GIT_HUB_TOKEN }}
-          path: ".github/actions/deploy/action.yml"
+          path: dist
 
-      — uses: "./.github/actions/deploy@master"
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
         with:
-          token: ${{ secrets.GIT_HUB_TOKEN }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
+
+      - name: Adding Known Hosts
+        run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy with rsync
+        run: rsync -avz . ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_PATH }}
+
+      ## Staging deployment info
+
+      - name: Get author name
+        id: author
+        run: echo "::set-output name=author::$(git show -s --format=%an)"
+
+      - name: Print author name
+        run: echo "${{ steps.author.outputs.author }}"
+
+      - name: Print author name with an environment variable
+        env:
+          AUTHOR_NAME: ${{ steps.author.outputs.author }}
+        run: echo $AUTHOR_NAME
+
+      - name: Mask sensitive data
+        env:
+          SUPER_SECRET: The cake is a lie.
+        run: |
+          echo "::add-mask::password123"
+          echo "My password is password123"
+          echo "::add-mask::$SUPER_SECRET"
+          echo "Here's a secret for you: $SUPER_SECRET"
