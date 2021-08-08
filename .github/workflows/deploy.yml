@@ -71,4 +71,4 @@ jobs:
 
       — uses: ./.github/actions/deploy@master
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GIT_HUB_TOKEN }}
