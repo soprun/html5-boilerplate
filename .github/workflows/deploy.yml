@@ -79,6 +79,4 @@ jobs:
     environment:
       name: production
     steps:
-      - uses: actions/deploy@v1
-        with:
-          token: ${{ secrets.WORKFLOW_TOKEN }}
+      - uses: soprun/deploy@v1
