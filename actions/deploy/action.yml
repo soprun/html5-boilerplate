@@ -1,12 +1,13 @@
-inputs:
-  name:
-    description: "edasda"
-    os: 'Your os'
-    default: 'No os default'
+name: 'Actions deploy'
+description: ''
 
 runs:
   using: "composite"
   steps:
+
+    - run: echo $RANDOM
+      shell: bash
+
     - uses: actions/checkout@v2
 
     - name: Checkout code
