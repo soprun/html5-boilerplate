@@ -5,10 +5,7 @@ on:
     branches:
       - master
 
-permissions:
-  actions: read/write
-  contents: read
-  pull-requests: write
+permissions: read-all
 
 env:
   # Секретные секретеры твоего приложение, (например подключение к базе данных, открытый API ключ и так далее).
