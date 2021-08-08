@@ -43,7 +43,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - uses: soprun/deploy@v1
+      - uses: actions/deploy@v1
 
   prod:
     name: Production deployment
@@ -58,4 +58,4 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - uses: soprun/deploy@v1
+      - uses: actions/deploy@v1
