@@ -71,3 +71,34 @@ jobs:
           path: |
             dist
             !dist/**/*.md
+
+  job-1:
+    needs: build
+    name: Having no purpose
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Get author name
+        id: author
+        run: echo "::set-output name=author::$(git show -s --format=%an)"
+
+      - name: Print author name
+        run: echo "${{ steps.author.outputs.author }}"
+
+      - name: Print author name with an environment variable
+        env:
+          AUTHOR_NAME: ${{ steps.author.outputs.author }}
+        run: echo $AUTHOR_NAME
+
+      - name: Mask sensitive data
+        env:
+          SUPER_SECRET: The cake is a lie.
+        run: |
+          echo "::add-mask::password123"
+          echo "My password is password123"
+          echo "::add-mask::$SUPER_SECRET"
+          echo "Here's a secret for you: $SUPER_SECRET"

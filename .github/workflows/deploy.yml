@@ -20,17 +20,17 @@ env:
 
 jobs:
 
-  #  on-success:
-  #    runs-on: ubuntu-latest
-  #    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-  #    steps:
-  #      - run: echo "on-success on branch $GITHUB_REF"
-  #
-  #  on-failure:
-  #    runs-on: ubuntu-latest
-  #    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
-  #    steps:
-  #      - run: echo "on-failure on branch $GITHUB_REF"
+  on-success:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - run: echo "on-success on branch $GITHUB_REF"
+
+  on-failure:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    steps:
+      - run: echo "on-failure on branch $GITHUB_REF"
 
   stage:
     name: Staging deployment
@@ -91,29 +91,3 @@ jobs:
 
       - name: Deploy with rsync
         run: rsync -avz . ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_PATH }}
-
-      ## Staging deployment info
-
-      - name: Get author name
-        id: author
-        run: echo "::set-output name=author::$(git show -s --format=%an)"
-
-      - name: Print author name
-        run: echo "${{ steps.author.outputs.author }}"
-
-      - name: Print author name with an environment variable
-        env:
-          AUTHOR_NAME: ${{ steps.author.outputs.author }}
-        run: echo $AUTHOR_NAME
-
-      - name: Mask sensitive data
-        env:
-          SUPER_SECRET: The cake is a lie.
-        run: |
-          echo "::add-mask::password123"
-          echo "My password is password123"
-          echo "::add-mask::$SUPER_SECRET"
-          echo "Here's a secret for you: $SUPER_SECRET"
-
-          echo "DATABASE_USERNAME - ::add-mask::$DATABASE_USERNAME"
-          echo "DATABASE_USERNAME - $DATABASE_USERNAME"
