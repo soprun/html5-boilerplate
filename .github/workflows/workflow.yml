@@ -1,5 +1,3 @@
-# see: https://ru.werf.io/documentation/v1.2/advanced/ci_cd/github_actions.html#%D1%82%D1%80%D0%B5%D0%B1%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F
-
 name: Continuous Integration
 
 on: [ push, pull_request ]
@@ -59,11 +57,9 @@ jobs:
         run: npm run npm-check
 
       - name: Run build in production mode
-        # if: github.event.pull_request.merged == true
         run: npm run build --if-present
 
       - name: Uploading an archive production artifacts
-        # if: github.event.pull_request.merged == true
         uses: actions/upload-artifact@v2
         with:
           retention-days: 2
@@ -74,7 +70,6 @@ jobs:
 
   deploy-stag:
     needs: build
-    # if: ${{ github.ref == 'refs/heads/develop' && github.event.pull_request.merged == true }}
     if: github.ref == 'refs/heads/develop'
     name: Staging Deployment
     runs-on: ubuntu-latest
@@ -87,7 +82,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - run: echo "Deploying to stage server on branch ${GITHUB_REF}"
+      - name: Downloading an archive production artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: dist
 
       - name: Install SSH Key
         uses: shimataro/ssh-key-action@v2
@@ -103,17 +101,13 @@ jobs:
 
   deploy-prod:
     needs: build
-    # if: ${{ github.ref == 'refs/heads/master' && github.event.pull_request.merged == true }}
     if: github.ref == 'refs/heads/master'
-    # if: ${{ github.event.inputs.tag != '' }} # don't release if no tag is specified
     name: Production Deployment
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment:
       name: production
     steps:
-      - run: echo "Deploying to production server on branch $GITHUB_REF"
-
       - name: Checkout code
         uses: actions/checkout@v2
         with:
@@ -123,3 +117,15 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           path: dist
+
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
+
+      - name: Adding Known Hosts
+        run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy with rsync
+        run: rsync -avz . ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_PATH }}
