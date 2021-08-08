@@ -54,7 +54,7 @@ jobs:
     environment:
       name: production
     steps:
-      - uses: soprun/deploy@v1
+      - uses: action/deploy@v1
         with:
           repository: soprun/html5-boilerplate
           token: ${{ secrets.WORKFLOW_TOKEN }}
