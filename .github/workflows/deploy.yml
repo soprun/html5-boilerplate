@@ -40,6 +40,9 @@ jobs:
     environment:
       name: staging
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - uses: soprun/deploy@v1
 
   prod:
@@ -52,4 +55,7 @@ jobs:
     environment:
       name: production
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - uses: soprun/deploy@v1
