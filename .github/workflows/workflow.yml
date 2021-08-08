@@ -57,6 +57,13 @@ jobs:
       - name: Run build in production mode
         run: npm run build --if-present
 
+      - name: Set the value
+        id: step_one
+        run: |
+          echo 'JSON_RESPONSE<<EOF' >> $GITHUB_ENV
+          curl https://httpbin.org/json >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
       - name: Uploading an archive production artifacts
         uses: actions/upload-artifact@v2
         with:
@@ -66,72 +73,72 @@ jobs:
             dist
             !dist/**/*.md
 
-  deploy-stag:
-    needs: build
-    if: github.event == 'pull_request' && github.ref == 'refs/heads/develop'
-    name: Staging deployment
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    env:
-      # Секретные секретеры твоего приложение, (например подключение к базе данных, открытый API ключ и так далее).
-      DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
-      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-
-      SUPER_SECRET: ${{ secrets.SUPER_SECRET }}
-    environment:
-      name: staging
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Downloading an archive production artifacts
-        uses: actions/download-artifact@v2
-        with:
-          path: dist
-
-      - name: Install SSH Key
-        uses: shimataro/ssh-key-action@v2
-        with:
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
-
-      - name: Adding Known Hosts
-        run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Deploy with rsync
-        run: rsync -avz . ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_PATH }}
-
-  deploy-prod:
-    needs: build
-    if: github.event == 'pull_request' && github.ref == 'refs/heads/master'
-    name: Production deployment
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    environment:
-      name: production
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Downloading an archive production artifacts
-        uses: actions/download-artifact@v2
-        with:
-          path: dist
-
-      - name: Install SSH Key
-        uses: shimataro/ssh-key-action@v2
-        with:
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
-
-      - name: Adding Known Hosts
-        run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Deploy with rsync
-        run: rsync -avz . ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_PATH }}
-
-
+#  deploy-stag:
+#    needs: build
+#    if: github.event == 'pull_request' && github.ref == 'refs/heads/develop'
+#    name: Staging deployment
+#    runs-on: ubuntu-latest
+#    timeout-minutes: 10
+#    env:
+#      # Секретные секретеры твоего приложение, (например подключение к базе данных, открытый API ключ и так далее).
+#      DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
+#      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+#
+#      SUPER_SECRET: ${{ secrets.SUPER_SECRET }}
+#    environment:
+#      name: staging
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v2
+#        with:
+#          fetch-depth: 0
+#
+#      - name: Downloading an archive production artifacts
+#        uses: actions/download-artifact@v2
+#        with:
+#          path: dist
+#
+#      - name: Install SSH Key
+#        uses: shimataro/ssh-key-action@v2
+#        with:
+#          key: ${{ secrets.SSH_PRIVATE_KEY }}
+#          known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
+#
+#      - name: Adding Known Hosts
+#        run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+#
+#      - name: Deploy with rsync
+#        run: rsync -avz . ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_PATH }}
+#
+#  deploy-prod:
+#    needs: build
+#    if: github.event == 'pull_request' && github.ref == 'refs/heads/master'
+#    name: Production deployment
+#    runs-on: ubuntu-latest
+#    timeout-minutes: 20
+#    environment:
+#      name: production
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v2
+#        with:
+#          fetch-depth: 0
+#
+#      - name: Downloading an archive production artifacts
+#        uses: actions/download-artifact@v2
+#        with:
+#          path: dist
+#
+#      - name: Install SSH Key
+#        uses: shimataro/ssh-key-action@v2
+#        with:
+#          key: ${{ secrets.SSH_PRIVATE_KEY }}
+#          known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
+#
+#      - name: Adding Known Hosts
+#        run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+#
+#      - name: Deploy with rsync
+#        run: rsync -avz . ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_PATH }}
+#
+#
