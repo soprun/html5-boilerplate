@@ -21,7 +21,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
 
-      - name: Get npm config get cache directory
+      - name: Get config cache directory
         id: npm-cache-dir
         run: |
           echo "::set-output name=dir::$(npm config get cache)"
@@ -68,10 +68,16 @@ jobs:
 
   deploy-stag:
     needs: build
-    if: github.ref == 'refs/heads/develop'
-    name: Staging Deployment
+    if: github.event == 'pull_request' && github.ref == 'refs/heads/develop'
+    name: Staging deployment
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      # Секретные секретеры твоего приложение, (например подключение к базе данных, открытый API ключ и так далее).
+      DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
+      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+
+      SUPER_SECRET: ${{ secrets.SUPER_SECRET }}
     environment:
       name: staging
     steps:
@@ -99,8 +105,8 @@ jobs:
 
   deploy-prod:
     needs: build
-    if: github.ref == 'refs/heads/master'
-    name: Production Deployment
+    if: github.event == 'pull_request' && github.ref == 'refs/heads/master'
+    name: Production deployment
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment:
@@ -127,3 +133,5 @@ jobs:
 
       - name: Deploy with rsync
         run: rsync -avz . ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_PATH }}
+
+
