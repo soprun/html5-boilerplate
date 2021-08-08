@@ -5,6 +5,11 @@ on:
     branches:
       - master
 
+permissions:
+  actions: read/write
+  contents: read
+  pull-requests: write
+
 env:
   # Секретные секретеры твоего приложение, (например подключение к базе данных, открытый API ключ и так далее).
   DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
@@ -27,20 +32,20 @@ jobs:
   #    steps:
   #      - run: echo "on-failure on branch $GITHUB_REF"
 
-#  staging:
-#    name: Staging deployment
-#    if: contains( github.ref, 'develop')
-#    # if: github.event.workflow_run.conclusion == 'success' && contains( github.ref, 'develop')
-#    # if: github.event_name == 'push'
-#    runs-on: ubuntu-latest
-#    timeout-minutes: 10
-#    environment:
-#      name: staging
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v2
-#
-#      - uses: actions/deploy@v1
+  #  staging:
+  #    name: Staging deployment
+  #    if: contains( github.ref, 'develop')
+  #    # if: github.event.workflow_run.conclusion == 'success' && contains( github.ref, 'develop')
+  #    # if: github.event_name == 'push'
+  #    runs-on: ubuntu-latest
+  #    timeout-minutes: 10
+  #    environment:
+  #      name: staging
+  #    steps:
+  #      - name: Checkout code
+  #        uses: actions/checkout@v2
+  #
+  #      - uses: actions/deploy@v1
 
   prod:
     name: Production deployment
@@ -59,4 +64,5 @@ jobs:
 
       - uses: actions/deploy@v1
         with:
+          repository: soprun/html5-boilerplate
           token: ${{ secrets.WORKFLOW_TOKEN }}
