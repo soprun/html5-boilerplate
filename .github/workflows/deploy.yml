@@ -2,11 +2,17 @@ name: Continuous delivery
 
 on:
   # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-  push:
-    branches:
-      - develop
-      - master
+  #  workflow_dispatch:
+  #  push:
+  #    branches:
+  #      - develop
+  #      - master
+
+  workflow_run:
+    workflows: [ "Continuous integration" ]
+    branches: [ master, develop ]
+    types: [ completed ]
+
 env:
   # Секретные секретеры твоего приложение, (например подключение к базе данных, открытый API ключ и так далее).
   DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
@@ -16,9 +22,23 @@ env:
   BITRIX_API_SECRET: ${{ secrets.BITRIX_API_SECRET }}
 
 jobs:
+
+  on-success:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - run: echo "on-success on branch $GITHUB_REF"
+
+  on-failure:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    steps:
+      - run: echo "on-failure on branch $GITHUB_REF"
+
   staging:
-    if: contains( github.ref, 'develop')
+    needs: on-success
     name: Staging deployment
+    if: contains( github.ref, 'develop')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment:
@@ -34,12 +54,12 @@ jobs:
         with:
           path: dist
 
-#      - shell: bash
-#        env:
-#          SUPER_SECRET: ${{ secrets.SuperSecret }}
-#        run: |
-#          echo "::set-output name=time::$SUPER_SECRET"
-#          echo "$SUPER_SECRET"
+      #      - shell: bash
+      #        env:
+      #          SUPER_SECRET: ${{ secrets.SuperSecret }}
+      #        run: |
+      #          echo "::set-output name=time::$SUPER_SECRET"
+      #          echo "$SUPER_SECRET"
 
       - name: Install SSH Key
         uses: shimataro/ssh-key-action@v2
@@ -54,14 +74,16 @@ jobs:
         run: rsync -avz . ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_PATH }}
 
   prod:
-    if: contains( github.ref, 'master')
+    needs: on-success
     name: Production deployment
+    # if: github.event_name == 'push' && contains( github.ref, 'master')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment:
       name: production
     steps:
-      - uses: soprun/deploy@v1
+      - uses: ./.github/actions/deploy@v1
         with:
+          os: ${{ runner.os }}
           name: OctoCat
 
