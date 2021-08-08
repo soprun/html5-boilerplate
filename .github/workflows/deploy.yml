@@ -5,7 +5,7 @@ on:
     branches:
       - master
 
-permissions: read-all
+# permissions: read-all
 
 env:
   # Секретные секретеры твоего приложение, (например подключение к базе данных, открытый API ключ и так далее).
@@ -54,7 +54,21 @@ jobs:
     environment:
       name: production
     steps:
-      - uses: action/deploy@v1
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      # checkout the private repo containing the action to run
+      - name: Checkout GitHub Action Repo
+        uses: actions/checkout@v2
         with:
           repository: soprun/html5-boilerplate
-          token: ${{ secrets.WORKFLOW_TOKEN }}
+          ref: v1.0.0
+          token: ${{ secrets.GIT_HUB_TOKEN }} # stored in GitHub secrets
+          path: .github/actions/deploy
+
+      — uses: ./.github/actions/deploy@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
