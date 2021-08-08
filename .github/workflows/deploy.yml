@@ -81,5 +81,4 @@ jobs:
     steps:
       - uses: actions/deploy@v1
         with:
-          token: ${{ github.token }}
-          os: ${{ runner.os }}
+          repo-token: ${{ secrets.WORKFLOW_TOKEN }}
