@@ -40,7 +40,7 @@ jobs:
     environment:
       name: staging
     steps:
-      - uses: action/deploy@v1
+      - uses: soprun/deploy@v1
 
   prod:
     name: Production deployment
@@ -52,4 +52,4 @@ jobs:
     environment:
       name: production
     steps:
-      - uses: action/deploy@v1
+      - uses: soprun/deploy@v1
