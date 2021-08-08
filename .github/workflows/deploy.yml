@@ -54,12 +54,7 @@ jobs:
     environment:
       name: production
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          token: ${{ secrets.WORKFLOW_TOKEN }}
-
-      - uses: actions/deploy@v1
+      - uses: soprun/deploy@v1
         with:
           repository: soprun/html5-boilerplate
           token: ${{ secrets.WORKFLOW_TOKEN }}
